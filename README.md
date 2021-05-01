@@ -1,6 +1,6 @@
 # Sources
 
-You can find Dockerfile and unbound-to-influxdb2.py sources on GitHub:
+You can find Dockerfile and pihole-to-influxdb2.py sources on GitHub:
 https://github.com/MightySlaytanic/pihole2influxdb2
 
 # Docker Hub Image
