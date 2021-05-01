@@ -1,3 +1,12 @@
+# Sources
+
+You can find Dockerfile and unbound-to-influxdb2.py sources on GitHub:
+https://github.com/MightySlaytanic/pihole2influxdb2
+
+# Docker Hub Image
+
+https://hub.docker.com/repository/docker/giannicostanzi/pihole2influxdb2
+
 # Base Image
 
 The base image is the official *python:3.9.4-alpine* (*python-3.9.4* for image 1.0) on top of which we install *influxdb_client* (via *pip*).
