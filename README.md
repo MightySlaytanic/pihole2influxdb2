@@ -139,13 +139,16 @@ CONTAINER ID   IMAGE                                 COMMAND                  CR
 
 **Note:** if you have problems with the healthcheck not changing to unhealthy when it should (you see errors in the logs, for example) have a look at the health check reported by *docker inspect CONTAINER_ID* if matches the following one:
 
-        "Healthcheck": {
-                "Test": [
-                    "CMD-SHELL",
-                    "grep OK /healthcheck || exit 1"
-                ],
-                "Interval": 30000000000,
-                "Timeout": 3000000000,
-                "Retries": 3
-            }
+```yaml
+"Healthcheck": {
+  "Test": [
+    "CMD-SHELL",
+    "grep OK /healthcheck || exit 1"
+  ],
+  "Interval": 30000000000,
+  "Timeout": 3000000000,
+  "Retries": 3
+}
+```
+
 If it doesn't, it could be the previous healthcheck used before tag 1.3 which wasn't working. I'm using *Watchtower* container to update my containers automatically and I've seen that my *pihole2influxdb2* container has been updated to 1.3.2 but healthcheck was still the old one, so I've recreated the container by hand and it worked as expected.
