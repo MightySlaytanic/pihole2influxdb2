@@ -34,57 +34,65 @@ The base image is the official *python:3.9.4-alpine* (*python-3.9.4* for image 1
 
 You can specify *-t* option which will be passed to **/pihole-to-influxdb2.py** within the container to output all the values obtained from pihole servers to screen, without uploading nothing to the influxdb server. Remember to specify *-t* also as *docker run* option in order to see the output immediately (otherwise it will be printed on output buffer flush)
 
-    docker run -t --rm \
-	-e INFLUX_HOST="influxdb_server_ip" \
-	-e INFLUX_PORT="8086" \
-	-e INFLUX_ORGANIZATION="org-name" \
-	-e INFLUX_BUCKET="bucket-name" \
-	-e INFLUX_TOKEN="influx_token" \
-	-e PIHOLE_HOSTS="ip1:port1:tag_name1,ip2:port2:tag_name2" \
-	pihole2influxdb2 -t
+```bash
+docker run -t --rm \
+-e INFLUX_HOST="influxdb_server_ip" \
+-e INFLUX_PORT="8086" \
+-e INFLUX_ORGANIZATION="org-name" \
+-e INFLUX_BUCKET="bucket-name" \
+-e INFLUX_TOKEN="influx_token" \
+-e PIHOLE_HOSTS="ip1:port1:tag_name1,ip2:port2:tag_name2" \
+pihole2influxdb2 -t
+```
 
 If you remove the *-t* option passed to the container, collected data will be uploaded to influxdb bucket in two measurements, *stats* and *gravity*. The following is an example of a non-debug run:
 
-    docker run -d  --name="pihole2influxdb2-stats" \
-	-e INFLUX_HOST="192.168.0.1" \
-	-e INFLUX_PORT="8086" \
-	-e INFLUX_ORGANIZATION="org-name" \
-	-e INFLUX_BUCKET="bucket-name" \
-	-e INFLUX_TOKEN="XXXXXXXXXX_INFLUX_TOKEN_XXXXXXXXXX" \
-	-e PIHOLE_HOSTS="192.168.0.2:50080:rpi3,192.168.0.3:80:rpi4" \
-	-e RUN_EVERY_SECONDS="60"
-	-e INFLUX_SERVICE_TAG="my_service_tag"
-	pihole2influxdb2
+```bash
+docker run -d  --name="pihole2influxdb2-stats" \
+-e INFLUX_HOST="192.168.0.1" \
+-e INFLUX_PORT="8086" \
+-e INFLUX_ORGANIZATION="org-name" \
+-e INFLUX_BUCKET="bucket-name" \
+-e INFLUX_TOKEN="XXXXXXXXXX_INFLUX_TOKEN_XXXXXXXXXX" \
+-e PIHOLE_HOSTS="192.168.0.2:50080:rpi3,192.168.0.3:80:rpi4" \
+-e RUN_EVERY_SECONDS="60"
+-e INFLUX_SERVICE_TAG="my_service_tag"
+pihole2influxdb2
+```
 
 These are the *fields* uploaded for *stats* measurement (I'll show the influxdb query used to view them all):
-   
-    from(bucket: "test-bucket")
-    |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-    |> filter(fn: (r) => r["_measurement"] == "stats")
-    |> filter(fn: (r) => r["_field"] == "ads_blocked_today" 
-    	or r["_field"] == "ads_percentage_today" 
-    	or r["_field"] == "clients_ever_seen" 
-    	or r["_field"] == "dns_queries_all_types" 
-    	or r["_field"] == "dns_queries_today" 
-    	or r["_field"] == "domains_being_blocked" 
-    	or r["_field"] == "privacy_level" 
-    	or r["_field"] == "queries_cached" 
-    	or r["_field"] == "queries_forwarded" 
-    	or r["_field"] == "reply_CNAME" 
-    	or r["_field"] == "reply_IP" 
-    	or r["_field"] == "reply_NODATA" 
-    	or r["_field"] == "reply_NXDOMAIN" 
-    	or r["_field"] == "status" 
-    	or r["_field"] == "unique_clients" 
-    	or r["_field"] == "unique_domains")
+
+```flux
+from(bucket: "test-bucket")
+|> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+|> filter(fn: (r) => r["_measurement"] == "stats")
+|> filter(fn: (r) => r["_field"] == "ads_blocked_today" 
+	or r["_field"] == "ads_percentage_today" 
+	or r["_field"] == "clients_ever_seen" 
+	or r["_field"] == "dns_queries_all_types" 
+	or r["_field"] == "dns_queries_today" 
+	or r["_field"] == "domains_being_blocked" 
+	or r["_field"] == "privacy_level" 
+	or r["_field"] == "queries_cached" 
+	or r["_field"] == "queries_forwarded" 
+	or r["_field"] == "reply_CNAME" 
+	or r["_field"] == "reply_IP" 
+	or r["_field"] == "reply_NODATA" 
+	or r["_field"] == "reply_NXDOMAIN" 
+	or r["_field"] == "status" 
+	or r["_field"] == "unique_clients" 
+	or r["_field"] == "unique_domains")
+```
 
 These are the fields uploaded for *gravity* measurement:
 
- 	from(bucket: "test-bucket")
-  	|> range(start: v.timeRangeStart, stop: v.timeRangeStop)
-  	|> filter(fn: (r) => r["_measurement"] == "gravity")
-  	|> filter(fn: (r) => r["_field"] == "file_exists" 
-  		or r["_field"] == "seconds_since_last_update")
+```flux
+from(bucket: "test-bucket")
+|> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+|> filter(fn: (r) => r["_measurement"] == "gravity")
+|> filter(fn: (r) => r["_field"] == "file_exists" 
+	or r["_field"] == "seconds_since_last_update")
+```
 
 Each record has also a tag named *host* that contains the names passed in *PIHOLE_HOSTS* environment variable and a *service* tag named as the *INFLUX_SERVICE_TAG* environment variable.
 
@@ -93,33 +101,41 @@ Each record has also a tag named *host* that contains the names passed in *PIHOL
 Starting from tag 1.3 I've implemented an healthcheck that sets the container to unhealthy as long as there is at least one Pi-hole server that can't be queried or if there are problems uploading stats to influxdb2 server. 
 For example, I launch a container with pihole2influxdb2:1.3 image and everything is ok, the container is healthy after 30 seconds:
 
-        $ docker ps
-	CONTAINER ID   IMAGE                                 COMMAND                  CREATED          STATUS                             PORTS                                            NAMES
-	22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   11 seconds ago   Up 10 seconds (health: starting)                                                    exciting_perlman
+```bash
+$ docker ps
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED          STATUS                             PORTS                                            NAMES
+22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   11 seconds ago   Up 10 seconds (health: starting)                                                    exciting_perlman
 
-	$ docker ps
-	CONTAINER ID   IMAGE                                 COMMAND                  CREATED          STATUS                    PORTS                                            NAMES
-	22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   32 seconds ago   Up 30 seconds (healthy)                                                    exciting_perlman
+$ docker ps
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED          STATUS                    PORTS                                            NAMES
+22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   32 seconds ago   Up 30 seconds (healthy)                                                    exciting_perlman
+```
 
 Now I restart Pi-hole on raspberry, and after some seconds it becomes unhealthy (it can take up to 90 seconds with the new health-check parameters to detect an unhealthy status):
 
-	$ docker ps 
+```bash
+$ docker ps 
 
-	CONTAINER ID   IMAGE                                 COMMAND                  CREATED              STATUS                          PORTS                                            NAMES
-	22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   About a minute ago   Up About a minute (unhealthy)                                                    exciting_perlman
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED              STATUS                          PORTS                                            NAMES
+22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   About a minute ago   Up About a minute (unhealthy)                                                    exciting_perlman
+```
 
 I can see from the logs what is the cause of the unhealthiness:
 
-	$ docker logs 22ff98ab4475
+```bash
+$ docker logs 22ff98ab4475
 
-	<urlopen error [Errno 111] Connection refused>
-	URLError: Could not connect to 192.168.0.2:50080(raspberry)
+<urlopen error [Errno 111] Connection refused>
+URLError: Could not connect to 192.168.0.2:50080(raspberry)
+```
 
 When Pi-hole is active again, the container goes back to healthy state:
 
-	$ docker ps
-	CONTAINER ID   IMAGE                                 COMMAND                  CREATED         STATUS                   PORTS                                            NAMES
-	22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   3 minutes ago   Up 3 minutes (healthy)                                                    exciting_perlman
+```bash
+$ docker ps
+CONTAINER ID   IMAGE                                 COMMAND                  CREATED         STATUS                   PORTS                                            NAMES
+22ff98ab4475   giannicostanzi/pihole2influxdb2:1.3   "python pihole-to-in…"   3 minutes ago   Up 3 minutes (healthy)                                                    exciting_perlman
+```
 
 **Note:** if you have problems with the healthcheck not changing to unhealthy when it should (you see errors in the logs, for example) have a look at the health check reported by *docker inspect CONTAINER_ID* if matches the following one:
 
