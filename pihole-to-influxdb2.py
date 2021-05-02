@@ -104,24 +104,31 @@ if __name__ == '__main__':
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connection Error: Could not connect to {host}:{host_port}({host_name})",file=sys.stderr)
                 continue
 
+
+            gravity_last_updated = stats.pop("gravity_last_updated")
+            gravity_file_exists = gravity_last_updated["file_exists"]
+            gravity_seconds_since_last_update = \
+                gravity_last_updated["relative"]["minutes"] * 60 \
+                + gravity_last_updated["relative"]["hours"] * 3600 \
+                + gravity_last_updated["relative"]["days"] * 86400
+
+            stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
+            gravity = {
+                "file_exists": gravity_file_exists,
+                "seconds_since_last_update": gravity_seconds_since_last_update
+            }
+
             if args.test:
                 print(f"\nStats for host {host}:{host_port}({host_name}): ")
                 print(json.dumps(stats, indent=4))
+                print(f"\nGravity for host {host}:{host_port}({host_name}): ")
+                print(json.dumps(gravity, indent=4))
             
             else:
-                gravity_last_updated = stats.pop("gravity_last_updated")
-                gravity_file_exists = gravity_last_updated["file_exists"]
-                gravity_seconds_since_last_update = \
-                    gravity_last_updated["relative"]["minutes"] * 60 \
-                    + gravity_last_updated["relative"]["hours"] * 3600 \
-                    + gravity_last_updated["relative"]["days"] * 86400
-
-                stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
-
                 try:
                     if DEBUG:
                         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Uploading data for host {host}({host_name})...")
-                    client = InfluxDBClient(url=f"http://{INFLUX_HOST}:{INFLUX_PORT}", token=INFLUX_TOKEN, org=INFLUX_ORGANIZATION, timeout=10)
+                    client = InfluxDBClient(url=f"http://{INFLUX_HOST}:{INFLUX_PORT}", token=INFLUX_TOKEN, org=INFLUX_ORGANIZATION)
                     write_api = client.write_api(write_options=SYNCHRONOUS)
 
                     write_api.write(
@@ -136,10 +143,7 @@ if __name__ == '__main__':
                             {
                                 "measurement": "gravity",
                                 "tags": {"host": host_name, "service":INFLUX_SERVICE_TAG},
-                                "fields": {
-                                    "file_exists": gravity_file_exists,
-                                    "seconds_since_last_update": gravity_seconds_since_last_update
-                                }
+                                "fields": gravity
                             }
                         ]
                     )
