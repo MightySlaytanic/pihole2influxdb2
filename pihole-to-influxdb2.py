@@ -8,6 +8,7 @@ from datetime import datetime
 from time import sleep
 from os import getenv
 from os.path import realpath, dirname
+from signal import signal, SIGTERM
 
 from influxdb_client import InfluxDBClient
 from influxdb_client.client.write_api import SYNCHRONOUS
@@ -31,6 +32,11 @@ VERBOSE = getenv("VERBOSE")
 DEBUG = 0
 
 
+def sigterm_handler(signum, frame):
+    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] SIGTERM received, shutting down..", file=sys.stderr)
+    sys.exit(0)
+
+
 def set_failed_flag():
     with open(HEALTHCHECK_FILE, "w") as healthcheck_file:
         healthcheck_file.write(HEALTHCHECK_FAILED)
@@ -42,6 +48,8 @@ def set_ok_flag():
 
     
 if __name__ == '__main__':
+    signal(SIGTERM, sigterm_handler)
+
     if VERBOSE.lower() == "true":
         DEBUG = 1
 
