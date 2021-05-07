@@ -55,8 +55,8 @@ docker run -d  --name="pihole2influxdb2-stats" \
 -e INFLUX_BUCKET="bucket-name" \
 -e INFLUX_TOKEN="XXXXXXXXXX_INFLUX_TOKEN_XXXXXXXXXX" \
 -e PIHOLE_HOSTS="192.168.0.2:50080:rpi3,192.168.0.3:80:rpi4" \
--e RUN_EVERY_SECONDS="60"
--e INFLUX_SERVICE_TAG="my_service_tag"
+-e RUN_EVERY_SECONDS="60" \
+-e INFLUX_SERVICE_TAG="my_service_tag" \
 pihole2influxdb2
 ```
 
