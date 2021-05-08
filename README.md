@@ -1,3 +1,7 @@
+# Changelog
+
+* **1.7**: upgraded Python base image to 3.9.5 
+
 # Sources
 
 You can find Dockerfile and pihole-to-influxdb2.py sources on GitHub:
@@ -9,7 +13,7 @@ https://hub.docker.com/repository/docker/giannicostanzi/pihole2influxdb2
 
 # Base Image
 
-The base image is the official *python:3.9.4-alpine* (*python-3.9.4* for image 1.0) on top of which we install *influxdb_client* (via *pip*).
+The base image is the official *python:3.x.y-alpine* on top of which we install *influxdb_client* (via *pip*).
 
 # Environment Variables
 
