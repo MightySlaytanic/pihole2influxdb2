@@ -1,6 +1,6 @@
 # Changelog
 
-* **1.7**: upgraded Python base image to 3.9.5 
+* **1.7**: upgraded Python base image from 3.9.4-alpine to 3.9.5-alpine
 
 # Sources
 
