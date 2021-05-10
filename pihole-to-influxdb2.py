@@ -120,12 +120,15 @@ if __name__ == '__main__':
                 + gravity_last_updated["relative"]["hours"] * 3600 \
                 + gravity_last_updated["relative"]["days"] * 86400
 
-            stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
             gravity = {
                 "file_exists": gravity_file_exists,
                 "seconds_since_last_update": gravity_seconds_since_last_update
             }
 
+            # Force ads_percentage_today to be float, to avoid InfluxDB2 errors when it is ZERO and WriteAPI ries to upload it as Integer
+            # with an existing field on the bucket already set as float
+            stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
+            
             if args.test:
                 print(f"\nStats for host {host}:{host_port}({host_name}): ")
                 print(json.dumps(stats, indent=4))
