@@ -1,8 +1,8 @@
-FROM python:3.9.5-alpine AS builder
+FROM python:3.10.0rc1-alpine AS builder
 COPY requirements.txt /tmp/requirements.txt
 RUN pip3 install --no-cache-dir --upgrade pip && pip3 install --user --no-cache-dir -r /tmp/requirements.txt
 
-FROM python:3.9.5-alpine
+FROM python:3.10.0rc1-alpine
 COPY --from=builder /root/.local /root/.local
 ENV PATH=/root/.local:$PATH
 COPY pihole-to-influxdb2.py /pihole-to-influxdb2.py
