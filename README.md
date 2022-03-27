@@ -4,7 +4,7 @@
 * **1.8**: upgraded Python base image to 3.10.0rc1-alpine
 * **1.8.1**: upgraded Python base image to 3.10.0-alpine
 * **1.8.2**: upgraded Python base image to 3.10.2-alpine3.15
-* **1.8.3**: upgraded Python base image to 3.11.0a6-alpine3.15
+* **1.8.3**: upgraded Python base image to 3.11.0a6-alpine3.15 and improved Pi-hole API Error handling
 
 # Sources
 
