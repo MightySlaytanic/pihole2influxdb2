@@ -119,6 +119,11 @@ if __name__ == '__main__':
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] API Error: <{error}> for {host}:{host_port}({host_name})",file=sys.stderr)
                 continue
 
+            if "FTLnotrunning" in stats:
+                failure = True
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FTL not running on {host}:{host_port}({host_name})",file=sys.stderr)
+                continue
+
             gravity_last_updated = stats.pop("gravity_last_updated")
             gravity_file_exists = gravity_last_updated["file_exists"]
             gravity_seconds_since_last_update = \
