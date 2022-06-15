@@ -6,6 +6,7 @@
 * **1.8.2**: upgraded Python base image to 3.10.2-alpine3.15
 * **1.8.3**: upgraded Python base image to 3.11.0a6-alpine3.15 and improved Pi-hole API Error handling
 * **1.8.4**: fixed an exception when remote Pi-hole FTL is not running
+* **1.8.5**: upgraded Python base image to 3.11.0b3-alpine3.15
 
 # Sources
 
