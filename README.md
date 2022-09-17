@@ -7,15 +7,21 @@
 * **1.8.3**: upgraded Python base image to 3.11.0a6-alpine3.15 and improved Pi-hole API Error handling
 * **1.8.4**: fixed an exception when remote Pi-hole FTL is not running
 * **1.8.5**: upgraded Python base image to 3.11.0b3-alpine3.15
+* **1.8.6**: upgraded Python base image to 3.11.0rc2-alpine3.16
+
+# Info
+
+You can find my series of articles about my pihole/unbound setup monitored via pihole2influxdb2 and unbound2influxdb2 at the following page:
+<http://giannicostanzi.medium.com>
 
 # Sources
 
 You can find Dockerfile and pihole-to-influxdb2.py sources on GitHub:
-https://github.com/MightySlaytanic/pihole2influxdb2
+<https://github.com/MightySlaytanic/pihole2influxdb2>
 
 # Docker Hub Image
 
-https://hub.docker.com/repository/docker/giannicostanzi/pihole2influxdb2
+<https://hub.docker.com/repository/docker/giannicostanzi/pihole2influxdb2>
 
 # Base Image
 
