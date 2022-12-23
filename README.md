@@ -1,4 +1,6 @@
-# Changelog
+# Pihole2InfluxDB2
+
+## Changelog
 
 * **1.7**: upgraded Python base image to 3.9.5-alpine
 * **1.8**: upgraded Python base image to 3.10.0rc1-alpine
@@ -10,25 +12,25 @@
 * **1.8.6**: upgraded Python base image to 3.11.0rc2-alpine3.16
 * **2.0**: Breaking change: [API Token required now](https://pi-hole.net/blog/2022/11/17/upcoming-changes-authentication-for-more-api-endpoints-required/) - Upgraded Python base image to 3.11-alpine3.17
 
-# Info
+## Info
 
 You can find my series of articles about my pihole/unbound setup monitored via pihole2influxdb2 and unbound2influxdb2 at the following page:
 <http://giannicostanzi.medium.com>
 
-# Sources
+## Sources
 
 You can find Dockerfile and pihole-to-influxdb2.py sources on GitHub:
 <https://github.com/MightySlaytanic/pihole2influxdb2>
 
-# Docker Hub Image
+## Docker Hub Image
 
 <https://hub.docker.com/repository/docker/giannicostanzi/pihole2influxdb2>
 
-# Base Image
+## Base Image
 
 The base image is the official *python:3.x.y-alpine* on top of which we install *influxdb_client* (via *pip*).
 
-# Environment Variables
+## Environment Variables
 
 | Variable | Values |Default|
 |-------------|-----------|-----------|
@@ -43,6 +45,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 | VERBOSE | Increase logging output (not so verbose BTW) |false
 
 *PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:APITOKEN1:rpi2,raspberry.home:80:APITOKEN2:rpi3,pihole-container:80:APITOKEN3:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
+
 * 192.168.0.1 which listens with http GUI on 50080/TCP and using rpi2 as *host* tag attached to the data sent to InfluxDB2
 * raspberry.home (DNS name) which listens on 80/TCP and using rpi3 as *host* tag
 * pihole-container which listens on 80/TCP and using pi-container as *host* tag. In this case *pihole-container* must be a container running on the same *non-default bridge network* on which this *pihole2influxdb2* container is running in order to have docker's name resolution working as expected and the port specified is the default 80/TCP port on which pihole official image is listening, not the port on which you expose it.
@@ -50,7 +53,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 *API TOKEN*: from v2.0 of this image it is required to specify the API TOKEN to query pihole servers. API Token can be found in the GUI
 under Settings -> API/WEB Interface -> Show API Token
 
-# Usage example
+## Usage example
 
 You can specify *-t* option which will be passed to **/pihole-to-influxdb2.py** within the container to output all the values obtained from pihole servers to screen, without uploading nothing to the influxdb server. Remember to specify *-t* also as *docker run* option in order to see the output immediately (otherwise it will be printed on output buffer flush)
 
@@ -87,21 +90,21 @@ from(bucket: "test-bucket")
 |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
 |> filter(fn: (r) => r["_measurement"] == "stats")
 |> filter(fn: (r) => r["_field"] == "ads_blocked_today" 
-	or r["_field"] == "ads_percentage_today" 
-	or r["_field"] == "clients_ever_seen" 
-	or r["_field"] == "dns_queries_all_types" 
-	or r["_field"] == "dns_queries_today" 
-	or r["_field"] == "domains_being_blocked" 
-	or r["_field"] == "privacy_level" 
-	or r["_field"] == "queries_cached" 
-	or r["_field"] == "queries_forwarded" 
-	or r["_field"] == "reply_CNAME" 
-	or r["_field"] == "reply_IP" 
-	or r["_field"] == "reply_NODATA" 
-	or r["_field"] == "reply_NXDOMAIN" 
-	or r["_field"] == "status" 
-	or r["_field"] == "unique_clients" 
-	or r["_field"] == "unique_domains")
+    or r["_field"] == "ads_percentage_today" 
+    or r["_field"] == "clients_ever_seen" 
+    or r["_field"] == "dns_queries_all_types" 
+    or r["_field"] == "dns_queries_today" 
+    or r["_field"] == "domains_being_blocked" 
+    or r["_field"] == "privacy_level" 
+    or r["_field"] == "queries_cached" 
+    or r["_field"] == "queries_forwarded" 
+    or r["_field"] == "reply_CNAME" 
+    or r["_field"] == "reply_IP" 
+    or r["_field"] == "reply_NODATA" 
+    or r["_field"] == "reply_NXDOMAIN" 
+    or r["_field"] == "status" 
+    or r["_field"] == "unique_clients" 
+    or r["_field"] == "unique_domains")
 ```
 
 These are the fields uploaded for *gravity* measurement:
@@ -111,14 +114,14 @@ from(bucket: "test-bucket")
 |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
 |> filter(fn: (r) => r["_measurement"] == "gravity")
 |> filter(fn: (r) => r["_field"] == "file_exists" 
-	or r["_field"] == "seconds_since_last_update")
+    or r["_field"] == "seconds_since_last_update")
 ```
 
 Each record has also a tag named *host* that contains the names passed in *PIHOLE_HOSTS* environment variable and a *service* tag named as the *INFLUX_SERVICE_TAG* environment variable.
 
-# Healthchecks
+## Healthchecks
 
-Starting from tag 1.3 I've implemented an healthcheck that sets the container to unhealthy as long as there is at least one Pi-hole server that can't be queried or if there are problems uploading stats to influxdb2 server. 
+Starting from tag 1.3 I've implemented an healthcheck that sets the container to unhealthy as long as there is at least one Pi-hole server that can't be queried or if there are problems uploading stats to influxdb2 server.
 For example, I launch a container with pihole2influxdb2:1.3 image and everything is ok, the container is healthy after 30 seconds:
 
 ```bash
