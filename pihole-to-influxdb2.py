@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 __author__ = "Gianni Costanzi <gianni DOT costanzi AT gmail DOT com>"
-__version__ = "2.0"
+__version__ = "2.0.2"
 
 import sys
 import json
