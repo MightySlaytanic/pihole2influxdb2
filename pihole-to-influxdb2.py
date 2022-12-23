@@ -144,7 +144,19 @@ if __name__ == '__main__':
             # Force ads_percentage_today to be float, to avoid InfluxDB2 errors when it is ZERO and WriteAPI ries to upload it as Integer
             # with an existing field on the bucket already set as float
             stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
-            
+
+            for key in stats.keys():
+                if isinstance(stats[key],str):
+                    value = stats[key].replace(',','')
+                    if value.isdigit():
+                        stats[key] = int(value)
+
+            for key in gravity.keys():
+                if isinstance(gravity[key],str):
+                    value = gravity[key].replace(',','')
+                    if value.isdigit():
+                        gravity[key] = int(value)
+
             if args.test:
                 print(f"\nStats for host {host}:{host_port}({host_name}): ")
                 print(json.dumps(stats, indent=4))
