@@ -1,4 +1,8 @@
 #!/usr/bin/python3
+
+__author__ = "Gianni Costanzi <gianni DOT costanzi AT gmail DOT com>"
+__version__ = "2.0"
+
 import sys
 import json
 import argparse
@@ -57,13 +61,13 @@ if __name__ == '__main__':
 
     for index, entry in enumerate(PIHOLE_HOSTS.split(",")):
         try:
-            host, port, name = entry.split(":")
+            host, port, token, name = entry.split(":")
         except ValueError as e:
             print(e, file=sys.stderr)
             print(f"Wrong PIHOLE_HOSTS entry <{entry}>!", file=sys.stderr)
             sys.exit(1)
 
-        PIHOLE_HOSTS_DICT.update({ index : { "host": host, "name": name, "port": port } })
+        PIHOLE_HOSTS_DICT.update({ index : { "host": host, "name": name, "port": port, "token": token} })
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting...")
     print("\nPIHOLE_HOSTS definition:\n")
@@ -94,12 +98,13 @@ if __name__ == '__main__':
             host = PIHOLE_HOSTS_DICT[index]["host"]
             host_name = PIHOLE_HOSTS_DICT[index]["name"]
             host_port = PIHOLE_HOSTS_DICT[index]["port"]
+            host_token = PIHOLE_HOSTS_DICT[index]["token"]
 
             if DEBUG:
                 print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Collecting data for host {host}:{host_port}({host_name})...")
 
             try:
-                with urllib.request.urlopen(f"http://{host}:{host_port}/admin/api.php", timeout=10) as url:
+                with urllib.request.urlopen(f"http://{host}:{host_port}/admin/api.php?summary&auth={host_token}", timeout=10) as url:
                     stats = json.loads(url.read().decode())
             except URLError as e:
                 failure = True

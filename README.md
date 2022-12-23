@@ -8,6 +8,7 @@
 * **1.8.4**: fixed an exception when remote Pi-hole FTL is not running
 * **1.8.5**: upgraded Python base image to 3.11.0b3-alpine3.15
 * **1.8.6**: upgraded Python base image to 3.11.0rc2-alpine3.16
+* **2.0**: Breaking change: [API Token required now](https://pi-hole.net/blog/2022/11/17/upcoming-changes-authentication-for-more-api-endpoints-required/) - Upgraded Python base image to 3.11-alpine3.17
 
 # Info
 
@@ -37,14 +38,17 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
 | INFLUX_TOKEN | InfluxDB2 access token to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
 | INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole
-| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:HOST_TAG*"|ip1:port1:name1,ip2:port2:name2 *// must be changed //*|
+| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:APITOKEN:HOST_TAG*"|ip1:port1:token1:name1,ip2:port2:token2:name2 *// must be changed //*|
 | RUN_EVERY_SECONDS | Pi-hole polling time | 10
 | VERBOSE | Increase logging output (not so verbose BTW) |false
 
-*PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:rpi2,raspberry.home:80:rpi3,pihole-container:80:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
+*PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:APITOKEN1:rpi2,raspberry.home:80:APITOKEN2:rpi3,pihole-container:80:APITOKEN3:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
 * 192.168.0.1 which listens with http GUI on 50080/TCP and using rpi2 as *host* tag attached to the data sent to InfluxDB2
 * raspberry.home (DNS name) which listens on 80/TCP and using rpi3 as *host* tag
 * pihole-container which listens on 80/TCP and using pi-container as *host* tag. In this case *pihole-container* must be a container running on the same *non-default bridge network* on which this *pihole2influxdb2* container is running in order to have docker's name resolution working as expected and the port specified is the default 80/TCP port on which pihole official image is listening, not the port on which you expose it.
+
+*API TOKEN*: from v2.0 of this image it is required to specify the API TOKEN to query pihole servers. API Token can be found in the GUI
+under Settings -> API/WEB Interface -> Show API Token
 
 # Usage example
 
@@ -57,7 +61,7 @@ docker run -t --rm \
 -e INFLUX_ORGANIZATION="org-name" \
 -e INFLUX_BUCKET="bucket-name" \
 -e INFLUX_TOKEN="influx_token" \
--e PIHOLE_HOSTS="ip1:port1:tag_name1,ip2:port2:tag_name2" \
+-e PIHOLE_HOSTS="ip1:port1:token1:tag_name1,ip2:port2:token2:tag_name2" \
 pihole2influxdb2 -t
 ```
 
@@ -70,7 +74,7 @@ docker run -d  --name="pihole2influxdb2-stats" \
 -e INFLUX_ORGANIZATION="org-name" \
 -e INFLUX_BUCKET="bucket-name" \
 -e INFLUX_TOKEN="XXXXXXXXXX_INFLUX_TOKEN_XXXXXXXXXX" \
--e PIHOLE_HOSTS="192.168.0.2:50080:rpi3,192.168.0.3:80:rpi4" \
+-e PIHOLE_HOSTS="192.168.0.2:50080:TOKEN1:rpi3,192.168.0.3:80:TOKEN2:rpi4" \
 -e RUN_EVERY_SECONDS="60" \
 -e INFLUX_SERVICE_TAG="my_service_tag" \
 pihole2influxdb2
