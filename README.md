@@ -13,6 +13,7 @@
 * **2.0**: Breaking change: [API Token required now](https://pi-hole.net/blog/2022/11/17/upcoming-changes-authentication-for-more-api-endpoints-required/) - Upgraded Python base image to 3.11-alpine3.17
 * **2.0.2**: fixed problems with integers uploaded as strings
 * **2.0.3**: upgraded Python base image to 3.11.2-alpine3.17
+* **2.0.4**: forced setuptools>=65.5.1 due to vulnerabilities
 
 ## Info
 
