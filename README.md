@@ -15,6 +15,7 @@
 * **2.0.3**: upgraded Python base image to 3.11.2-alpine3.17
 * **2.0.4**: forced setuptools>=65.5.1 due to vulnerabilities
 * **2.0.5**: upgraded Python base image to 3.12.0-alpine3.18
+* **2.1.0**: there is a small *breaking change* in the INFLUX_HOST variable that you must pass to the script. Now you must specify http:// or https:// in front of the url or IP address of your influxdb host.
 
 ## Info
 
@@ -38,7 +39,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 
 | Variable | Values |Default|
 |-------------|-----------|-----------|
-| INFLUX_HOST|IP, DNS or Docker Container/Service name of InfluxDB2 Server |IP_OR_NAME *// must be changed //*|
+| INFLUX_HOST|The host URL including https or http protocol specification (example: https://name.domain.com) or IP (example: http://192.168.0.1) for your InfluxDb instance|IP_OR_NAME *// must be changed //*|
 | INFLUX_PORT|Port on which InfluxDB2 server is listening, usually 8086 |PORT *// must be changed //*|
 | INFLUX_ORGANIZATION| Organization set in InfluxDB2 |ORGANIZATION *// must be changed //*|
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
