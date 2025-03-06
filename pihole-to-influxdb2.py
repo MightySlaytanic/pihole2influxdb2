@@ -6,8 +6,8 @@ __version__ = "2.0.2"
 import sys
 import json
 import argparse
-import urllib.request
-from urllib.error import URLError
+import requests
+from requests import HTTPError
 from datetime import datetime
 from time import sleep
 from os import getenv
@@ -104,12 +104,14 @@ if __name__ == '__main__':
                 print(f"\n[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Collecting data for host {host}:{host_port}({host_name})...")
 
             try:
-                with urllib.request.urlopen(f"http://{host}:{host_port}/admin/api.php?summary&auth={host_token}", timeout=10) as url:
-                    stats = json.loads(url.read().decode())
-            except URLError as e:
+                auth_url=f"http://{host}:{host_port}/api/auth"
+                pwd_payload='{"password": "' + host_token +'"}'
+                with requests.request("POST", auth_url, json=pwd_payload, verify=False) as auth_response:
+                    print(auth_response)
+            except HTTPError as e:
                 failure = True
                 print(e,file=sys.stderr)
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] URLError: Could not connect to {host}:{host_port}({host_name})",file=sys.stderr)
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] HTTPError: Could not connect to {host}:{host_port}({host_name})",file=sys.stderr)
                 continue
             except Exception as e:
                 failure = True
@@ -117,92 +119,92 @@ if __name__ == '__main__':
                 print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connection Error: Could not connect to {host}:{host_port}({host_name})",file=sys.stderr)
                 continue
             
-            # Check if API call returned an error
-            if "error" in stats:
-                error=stats.pop("error")
-                failure = True
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] API Error: <{error}> for {host}:{host_port}({host_name})",file=sys.stderr)
-                continue
-
-            if "FTLnotrunning" in stats:
-                failure = True
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FTL not running on {host}:{host_port}({host_name})",file=sys.stderr)
-                continue
-
-            gravity_last_updated = stats.pop("gravity_last_updated")
-            gravity_file_exists = gravity_last_updated["file_exists"]
-            gravity_seconds_since_last_update = \
-                gravity_last_updated["relative"]["minutes"] * 60 \
-                + gravity_last_updated["relative"]["hours"] * 3600 \
-                + gravity_last_updated["relative"]["days"] * 86400
-
-            gravity = {
-                "file_exists": gravity_file_exists,
-                "seconds_since_last_update": gravity_seconds_since_last_update
-            }
-
-            # Force ads_percentage_today to be float, to avoid InfluxDB2 errors when it is ZERO and WriteAPI ries to upload it as Integer
-            # with an existing field on the bucket already set as float
-            stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
-
-            for key in stats.keys():
-                if isinstance(stats[key],str):
-                    value = stats[key].replace(',','')
-                    if value.isdigit():
-                        stats[key] = int(value)
-
-            for key in gravity.keys():
-                if isinstance(gravity[key],str):
-                    value = gravity[key].replace(',','')
-                    if value.isdigit():
-                        gravity[key] = int(value)
-
-            if args.test:
-                print(f"\nStats for host {host}:{host_port}({host_name}): ")
-                print(json.dumps(stats, indent=4))
-                print(f"\nGravity for host {host}:{host_port}({host_name}): ")
-                print(json.dumps(gravity, indent=4))
-            
-            else:
-                try:
-                    if DEBUG:
-                        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Uploading data for host {host}({host_name})...")
-                    client = InfluxDBClient(url=f"{INFLUX_HOST}:{INFLUX_PORT}", token=INFLUX_TOKEN, org=INFLUX_ORGANIZATION)
-                    write_api = client.write_api(write_options=SYNCHRONOUS)
-
-                    write_api.write(
-                        INFLUX_BUCKET,
-                        INFLUX_ORGANIZATION,
-                        [
-                            {
-                                "measurement": "stats",
-                                "tags": {"host": host_name, "service":INFLUX_SERVICE_TAG},
-                                "fields": stats
-                            },
-                            {
-                                "measurement": "gravity",
-                                "tags": {"host": host_name, "service":INFLUX_SERVICE_TAG},
-                                "fields": gravity
-                            }
-                        ]
-                    )
-                except TimeoutError as e:
-                    failure = True
-                    print(e,file=sys.stderr)
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] TimeoutError: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
-                    continue
-                except InfluxDBError as e:
-                    failure = True
-                    print(e,file=sys.stderr)
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] InfluxDBError: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
-                    continue
-                except Exception as e:
-                    failure = True
-                    print(e, file=sys.stderr)
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connection Error: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
-                    continue
-                finally:
-                    client.close()
+            ## Check if API call returned an error
+            #if "error" in stats:
+            #    error=stats.pop("error")
+            #    failure = True
+            #    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] API Error: <{error}> for {host}:{host_port}({host_name})",file=sys.stderr)
+            #    continue
+#
+            #if "FTLnotrunning" in stats:
+            #    failure = True
+            #    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] FTL not running on {host}:{host_port}({host_name})",file=sys.stderr)
+            #    continue
+#
+            #gravity_last_updated = stats.pop("gravity_last_updated")
+            #gravity_file_exists = gravity_last_updated["file_exists"]
+            #gravity_seconds_since_last_update = \
+            #    gravity_last_updated["relative"]["minutes"] * 60 \
+            #    + gravity_last_updated["relative"]["hours"] * 3600 \
+            #    + gravity_last_updated["relative"]["days"] * 86400
+#
+            #gravity = {
+            #    "file_exists": gravity_file_exists,
+            #    "seconds_since_last_update": gravity_seconds_since_last_update
+            #}
+#
+            ## Force ads_percentage_today to be float, to avoid InfluxDB2 errors when it is ZERO and WriteAPI ries to upload it as Integer
+            ## with an existing field on the bucket already set as float
+            #stats["ads_percentage_today"] = float(stats["ads_percentage_today"])
+#
+            #for key in stats.keys():
+            #    if isinstance(stats[key],str):
+            #        value = stats[key].replace(',','')
+            #        if value.isdigit():
+            #            stats[key] = int(value)
+#
+            #for key in gravity.keys():
+            #    if isinstance(gravity[key],str):
+            #        value = gravity[key].replace(',','')
+            #        if value.isdigit():
+            #            gravity[key] = int(value)
+#
+            #if args.test:
+            #    print(f"\nStats for host {host}:{host_port}({host_name}): ")
+            #    print(json.dumps(stats, indent=4))
+            #    print(f"\nGravity for host {host}:{host_port}({host_name}): ")
+            #    print(json.dumps(gravity, indent=4))
+            #
+            #else:
+            #    try:
+            #        if DEBUG:
+            #            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Uploading data for host {host}({host_name})...")
+            #        client = InfluxDBClient(url=f"{INFLUX_HOST}:{INFLUX_PORT}", token=INFLUX_TOKEN, org=INFLUX_ORGANIZATION)
+            #        write_api = client.write_api(write_options=SYNCHRONOUS)
+#
+            #        write_api.write(
+            #            INFLUX_BUCKET,
+            #            INFLUX_ORGANIZATION,
+            #            [
+            #                {
+            #                    "measurement": "stats",
+            #                    "tags": {"host": host_name, "service":INFLUX_SERVICE_TAG},
+            #                    "fields": stats
+            #                },
+            #                {
+            #                    "measurement": "gravity",
+            #                    "tags": {"host": host_name, "service":INFLUX_SERVICE_TAG},
+            #                    "fields": gravity
+            #                }
+            #            ]
+            #        )
+            #    except TimeoutError as e:
+            #        failure = True
+            #        print(e,file=sys.stderr)
+            #        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] TimeoutError: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
+            #        continue
+            #    except InfluxDBError as e:
+            #        failure = True
+            #        print(e,file=sys.stderr)
+            #        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] InfluxDBError: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
+            #        continue
+            #    except Exception as e:
+            #        failure = True
+            #        print(e, file=sys.stderr)
+            #        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connection Error: Could not upload data to {INFLUX_HOST}:{INFLUX_PORT} for {host}:{host_port}({host_name})",file=sys.stderr)
+            #        continue
+            #    finally:
+            #        client.close()
     
         # Health check management
         if failure:

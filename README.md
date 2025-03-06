@@ -40,15 +40,15 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 
 | Variable | Values |Default|
 |-------------|-----------|-----------|
-| INFLUX_HOST|The host URL including https or http protocol specification (example: https://name.domain.com) or IP (example: http://192.168.0.1) for your InfluxDb instance|IP_OR_NAME *// must be changed //*|
+| INFLUX_HOST|The host URL including https or http protocol specification (example: <https://name.domain.com>) or IP (example: <http://192.168.0.1>) for your InfluxDb instance|IP_OR_NAME *// must be changed //*|
 | INFLUX_PORT|Port on which InfluxDB2 server is listening, usually 8086 |PORT *// must be changed //*|
 | INFLUX_ORGANIZATION| Organization set in InfluxDB2 |ORGANIZATION *// must be changed //*|
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
 | INFLUX_TOKEN | InfluxDB2 access token to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
-| INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole
+| INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole|
 | PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:APITOKEN:HOST_TAG*"|ip1:port1:token1:name1,ip2:port2:token2:name2 *// must be changed //*|
-| RUN_EVERY_SECONDS | Pi-hole polling time | 10
-| VERBOSE | Increase logging output (not so verbose BTW) |false
+| RUN_EVERY_SECONDS | Pi-hole polling time | 10|
+| VERBOSE | Increase logging output (not so verbose BTW) |false|
 
 *PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:APITOKEN1:rpi2,raspberry.home:80:APITOKEN2:rpi3,pihole-container:80:APITOKEN3:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
 
