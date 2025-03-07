@@ -17,6 +17,7 @@
 * **2.0.5**: upgraded Python base image to 3.12.0-alpine3.18
 * **2.1.0**: there is a small *breaking change* in the INFLUX_HOST variable that you must pass to the script. Now you must specify http:// or https:// in front of the url or IP address of your influxdb host.
 * **2.1.1**: upgraded Python base image to 3.13.0a6-alpine3.18
+* **3.0.0**: Breaking change: [PiHole v6 new REST API](https://www.reddit.com/r/pihole/comments/1isiulz/introducing_pihole_v6/): authentication via REST API with PiHole GUI password or via App Password generated in the GUI and needed if you enable 2FA authentication (System -> Web Interface / API -> Advanced Settings). After switching to APIv6 not all previous info can be get from Pi-hole, have a look at the following documentation for the current fields uploaded to InfluxDB2 (I've renamed some new fields to match the old ones and break less stuff) - Upgraded Python base image to 3.13.2-alpine3.21
 
 ## Info
 
@@ -44,20 +45,19 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 | INFLUX_PORT|Port on which InfluxDB2 server is listening, usually 8086 |PORT *// must be changed //*|
 | INFLUX_ORGANIZATION| Organization set in InfluxDB2 |ORGANIZATION *// must be changed //*|
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
-| INFLUX_TOKEN | InfluxDB2 access token to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
+| INFLUX_TOKEN | InfluxDB2 access password to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
 | INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole|
-| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:APITOKEN:HOST_TAG*"|ip1:port1:token1:name1,ip2:port2:token2:name2 *// must be changed //*|
+| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:PASSWORD:HOST_TAG*"|ip1:port1:token1:name1,ip2:port2:token2:name2 *// must be changed //*|
 | RUN_EVERY_SECONDS | Pi-hole polling time | 10|
 | VERBOSE | Increase logging output (not so verbose BTW) |false|
 
-*PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:APITOKEN1:rpi2,raspberry.home:80:APITOKEN2:rpi3,pihole-container:80:APITOKEN3:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
+*PIHOLE_HOSTS*: this variable can be set for example to *192.168.0.1:50080:PASSWORD1:rpi2,raspberry.home:80:PASSWORD2:rpi3,pihole-container:80:PASSWORD3:pi-container* which in turn configures the container to poll every *RUN_EVERY_SECONDS* the following Pi-hole servers:
 
 * 192.168.0.1 which listens with http GUI on 50080/TCP and using rpi2 as *host* tag attached to the data sent to InfluxDB2
 * raspberry.home (DNS name) which listens on 80/TCP and using rpi3 as *host* tag
 * pihole-container which listens on 80/TCP and using pi-container as *host* tag. In this case *pihole-container* must be a container running on the same *non-default bridge network* on which this *pihole2influxdb2* container is running in order to have docker's name resolution working as expected and the port specified is the default 80/TCP port on which pihole official image is listening, not the port on which you expose it.
 
-*API TOKEN*: from v2.0 of this image it is required to specify the API TOKEN to query pihole servers. API Token can be found in the GUI
-under Settings -> API/WEB Interface -> Show API Token
+*PASSWORD*: from v2.0 of this image it is required to specify the API TOKEN to query pihole servers. API Token can be found in the GUI under Settings -> API/WEB Interface -> Show API Token. Starting from v3.0 and with Pi-hole v6 we use the standard GUI password or an App Password in case you enable 2FA for GUI access (System -> Web Interface / API -> Advanced Settings).
 
 ## Usage example
 
@@ -70,7 +70,7 @@ docker run -t --rm \
 -e INFLUX_ORGANIZATION="org-name" \
 -e INFLUX_BUCKET="bucket-name" \
 -e INFLUX_TOKEN="influx_token" \
--e PIHOLE_HOSTS="ip1:port1:token1:tag_name1,ip2:port2:token2:tag_name2" \
+-e PIHOLE_HOSTS="ip1:port1:password1:tag_name1,ip2:port2:password2:tag_name2" \
 pihole2influxdb2 -t
 ```
 
@@ -83,7 +83,7 @@ docker run -d  --name="pihole2influxdb2-stats" \
 -e INFLUX_ORGANIZATION="org-name" \
 -e INFLUX_BUCKET="bucket-name" \
 -e INFLUX_TOKEN="XXXXXXXXXX_INFLUX_TOKEN_XXXXXXXXXX" \
--e PIHOLE_HOSTS="192.168.0.2:50080:TOKEN1:rpi3,192.168.0.3:80:TOKEN2:rpi4" \
+-e PIHOLE_HOSTS="192.168.0.2:50080:PASSWORD1:rpi3,192.168.0.3:80:PASSWORD2:rpi4" \
 -e RUN_EVERY_SECONDS="60" \
 -e INFLUX_SERVICE_TAG="my_service_tag" \
 pihole2influxdb2
@@ -95,22 +95,46 @@ These are the *fields* uploaded for *stats* measurement (I'll show the influxdb 
 from(bucket: "test-bucket")
 |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
 |> filter(fn: (r) => r["_measurement"] == "stats")
-|> filter(fn: (r) => r["_field"] == "ads_blocked_today" 
-    or r["_field"] == "ads_percentage_today" 
-    or r["_field"] == "clients_ever_seen" 
-    or r["_field"] == "dns_queries_all_types" 
-    or r["_field"] == "dns_queries_today" 
-    or r["_field"] == "domains_being_blocked" 
-    or r["_field"] == "privacy_level" 
-    or r["_field"] == "queries_cached" 
-    or r["_field"] == "queries_forwarded" 
-    or r["_field"] == "reply_CNAME" 
-    or r["_field"] == "reply_IP" 
-    or r["_field"] == "reply_NODATA" 
-    or r["_field"] == "reply_NXDOMAIN" 
-    or r["_field"] == "status" 
-    or r["_field"] == "unique_clients" 
-    or r["_field"] == "unique_domains")
+|> filter(fn: (r) => r["_field"] == "ads_percentage_today"
+    or r["_field"] == "queries_blocked"
+    or r["_field"] == "queries_cached"
+    or r["_field"] == "queries_forwarded"
+    or r["_field"] == "clients_ever_seen"
+    or r["_field"] == "clients_active"
+    or r["_field"] == "domains_being_blocked"
+    or r["_field"] == "unique_domains"
+    or r["_field"] == "reply_UNKNOWN"
+    or r["_field"] == "reply_NODATA"
+    or r["_field"] == "reply_NXDOMAIN"
+    or r["_field"] == "reply_CNAME"
+    or r["_field"] == "reply_IP"
+    or r["_field"] == "reply_DOMAIN"
+    or r["_field"] == "reply_RRNAME"
+    or r["_field"] == "reply_SERVFAIL"
+    or r["_field"] == "reply_REFUSED"
+    or r["_field"] == "reply_NOTIMP"
+    or r["_field"] == "reply_OTHER"
+    or r["_field"] == "reply_DNSSEC"
+    or r["_field"] == "reply_NONE"
+    or r["_field"] == "reply_BLOB"
+    or r["_field"] == "dns_replies_all_types"
+    or r["_field"] == "query_A"
+    or r["_field"] == "query_AAAA"
+    or r["_field"] == "query_ANY"
+    or r["_field"] == "query_SRV"
+    or r["_field"] == "query_SOA"
+    or r["_field"] == "query_PTR"
+    or r["_field"] == "query_TXT"
+    or r["_field"] == "query_NAPTR"
+    or r["_field"] == "query_MX"
+    or r["_field"] == "query_DS"
+    or r["_field"] == "query_RRSIG"
+    or r["_field"] == "query_DNSKEY"
+    or r["_field"] == "query_NS"
+    or r["_field"] == "query_SVCB"
+    or r["_field"] == "query_HTTPS"
+    or r["_field"] == "query_OTHER"
+    or r["_field"] == "dns_queries_all_types")
 ```
 
 These are the fields uploaded for *gravity* measurement:
