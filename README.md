@@ -47,7 +47,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
 | INFLUX_TOKEN | InfluxDB2 access password to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
 | INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole|
-| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:PASSWORD:HOST_TAG*"|ip1:port1:token1:name1,ip2:port2:token2:name2 *// must be changed //*|
+| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:PASSWORD:HOST_TAG*"|ip1:port1:password1:name1,ip2:port2:password2:name2 *// must be changed //*|
 | RUN_EVERY_SECONDS | Pi-hole polling time | 10|
 | VERBOSE | Increase logging output (not so verbose BTW) |false|
 
