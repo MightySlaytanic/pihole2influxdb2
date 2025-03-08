@@ -18,6 +18,7 @@
 * **2.1.0**: there is a small *breaking change* in the INFLUX_HOST variable that you must pass to the script. Now you must specify http:// or https:// in front of the url or IP address of your influxdb host.
 * **2.1.1**: upgraded Python base image to 3.13.0a6-alpine3.18
 * **3.0.0**: Breaking change: [PiHole v6 new REST API](https://www.reddit.com/r/pihole/comments/1isiulz/introducing_pihole_v6/): authentication via REST API with PiHole GUI password or via App Password generated in the GUI and needed if you enable 2FA authentication (System -> Web Interface / API -> Advanced Settings). After switching to APIv6 not all previous info can be get from Pi-hole, have a look at the following documentation for the current fields uploaded to InfluxDB2 (I've renamed some new fields to match the old ones and break less stuff) - Upgraded Python base image to 3.13.2-alpine3.21
+* **3.1.0**: added possibility to specify Pi-hole hosts' definitions on a file which must be mounted on /etc/pihole_hosts
 
 ## Info
 
@@ -47,7 +48,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 | INFLUX_BUCKET | Bucket on InfluxDB2 server where measurements will be stored |BUCKET *// must be changed //*|
 | INFLUX_TOKEN | InfluxDB2 access password to write data on *INFLUX_BUCKET* |TOKEN *// must be changed //*|
 | INFLUX_SERVICE_TAG | Name assigned to the *service* tag assigned to every record sent to InfluxDB2 | pihole|
-| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:PASSWORD:HOST_TAG*"|ip1:port1:password1:name1,ip2:port2:password2:name2 *// must be changed //*|
+| PIHOLE_HOSTS | Comma separated list of Pi-hole hosts definition, each of which is written in format *IP_OR_NAME:PORT:PASSWORD:HOST_TAG*". Set it to "file" to force Pi-hole hosts' definitions lookup on /etc/pihole_hosts |ip1:port1:password1:name1,ip2:port2:password2:name2 *// must be changed //*|
 | RUN_EVERY_SECONDS | Pi-hole polling time | 10|
 | VERBOSE | Increase logging output (not so verbose BTW) |false|
 
@@ -56,6 +57,25 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 * 192.168.0.1 which listens with http GUI on 50080/TCP and using rpi2 as *host* tag attached to the data sent to InfluxDB2
 * raspberry.home (DNS name) which listens on 80/TCP and using rpi3 as *host* tag
 * pihole-container which listens on 80/TCP and using pi-container as *host* tag. In this case *pihole-container* must be a container running on the same *non-default bridge network* on which this *pihole2influxdb2* container is running in order to have docker's name resolution working as expected and the port specified is the default 80/TCP port on which pihole official image is listening, not the port on which you expose it.
+
+If PIHOLE_HOSTS is set to "file" the program reads the /etc/pihole_hosts file for Pi-hole hosts' definitions. If running as a container you need to mount a file with the following format onto /etc/pihole_hosts:
+
+```json
+[
+    {
+        "host":"ip1",
+        "port":"port1",
+        "password":"password1",
+        "name":"name1"
+    },
+    {
+        "host":"ip2",
+        "port":"port2",
+        "password":"password2",
+        "name":"name2"
+    }
+]
+```
 
 *PASSWORD*: from v2.0 of this image it is required to specify the API TOKEN to query pihole servers. API Token can be found in the GUI under Settings -> API/WEB Interface -> Show API Token. Starting from v3.0 and with Pi-hole v6 we use the standard GUI password or an App Password in case you enable 2FA for GUI access (System -> Web Interface / API -> Advanced Settings).
 
@@ -87,6 +107,12 @@ docker run -d  --name="pihole2influxdb2-stats" \
 -e RUN_EVERY_SECONDS="60" \
 -e INFLUX_SERVICE_TAG="my_service_tag" \
 pihole2influxdb2
+```
+
+If you set PIHOLE_HOSTS to "file" then you have to bind mount a file with Pi-hole hosts' definitions on /etc/pihole_hosts within the container. Supposing to have a pihole_hosts file in the current folder, mount it by adding the following option to docker run command:
+
+```bash
+-v $(PWD)/pihole_hosts:pihole_hosts:ro
 ```
 
 These are the *fields* uploaded for *stats* measurement (I'll show the influxdb query used to view them all):
