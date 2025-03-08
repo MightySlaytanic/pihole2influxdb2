@@ -58,7 +58,7 @@ The base image is the official *python:3.x.y-alpine* on top of which we install 
 * raspberry.home (DNS name) which listens on 80/TCP and using rpi3 as *host* tag
 * pihole-container which listens on 80/TCP and using pi-container as *host* tag. In this case *pihole-container* must be a container running on the same *non-default bridge network* on which this *pihole2influxdb2* container is running in order to have docker's name resolution working as expected and the port specified is the default 80/TCP port on which pihole official image is listening, not the port on which you expose it.
 
-If PIHOLE_HOSTS is set to "file" the program reads the /etc/pihole_hosts file for Pi-hole hosts' definitions. If running as a container you need to mount a file with the following format onto /etc/pihole_hosts:
+If PIHOLE_HOSTS is set to "file" the program reads the /etc/pihole_hosts file for Pi-hole hosts' definitions. If running as a container you need to mount a file with the following format onto /etc/pihole_hosts, otherwise you must have an etc folder where the pihole-to-influxdb2.py resides, with a pihole_hosts file within it:
 
 ```json
 [

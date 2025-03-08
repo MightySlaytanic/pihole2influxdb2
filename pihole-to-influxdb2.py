@@ -30,7 +30,7 @@ INFLUX_BUCKET = getenv("INFLUX_BUCKET")
 INFLUX_TOKEN = getenv("INFLUX_TOKEN")
 INFLUX_SERVICE_TAG = getenv("INFLUX_SERVICE_TAG")
 PIHOLE_HOSTS = getenv("PIHOLE_HOSTS")
-PIHOLE_HOSTS_FILE = "/etc/pihole_hosts"
+PIHOLE_HOSTS_FILE = f"{PROGRAM_DIR}/etc/pihole_hosts"
 RUN_EVERY_SECONDS = int(getenv("RUN_EVERY_SECONDS"))
 VERBOSE = getenv("VERBOSE")
 
@@ -85,7 +85,7 @@ if __name__ == '__main__':
             if DEBUG:
                 print(f"Imported hosts definitions from file {PIHOLE_HOSTS_FILE}")
         else:
-            print(f"File /etc/pihole_hosts not found!", file=sys.stderr)
+            print(f"File {PIHOLE_HOSTS_FILE} not found!", file=sys.stderr)
             sys.exit(1)
 
     else:
