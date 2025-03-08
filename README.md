@@ -18,7 +18,7 @@
 * **2.1.0**: there is a small *breaking change* in the INFLUX_HOST variable that you must pass to the script. Now you must specify http:// or https:// in front of the url or IP address of your influxdb host.
 * **2.1.1**: upgraded Python base image to 3.13.0a6-alpine3.18
 * **3.0.0**: Breaking change: [PiHole v6 new REST API](https://www.reddit.com/r/pihole/comments/1isiulz/introducing_pihole_v6/): authentication via REST API with PiHole GUI password or via App Password generated in the GUI and needed if you enable 2FA authentication (System -> Web Interface / API -> Advanced Settings). After switching to APIv6 not all previous info can be get from Pi-hole, have a look at the following documentation for the current fields uploaded to InfluxDB2 (I've renamed some new fields to match the old ones and break less stuff) - Upgraded Python base image to 3.13.2-alpine3.21
-* **3.1.0**: added possibility to specify Pi-hole hosts' definitions on a file which must be mounted on /etc/pihole_hosts
+* **3.1.0**: added possibility to specify Pi-hole hosts' definitions on file etc/pihole_hosts in the root folder of a container or in the same folder where pihole-to-influxdb2.py resides
 
 ## Info
 
