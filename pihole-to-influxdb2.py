@@ -11,7 +11,7 @@ from requests import HTTPError
 from datetime import datetime
 from time import sleep
 from os import getenv
-from os.path import realpath, dirname
+from os.path import realpath, dirname, isfile
 from signal import signal, SIGTERM
 
 from influxdb_client import InfluxDBClient
@@ -30,6 +30,7 @@ INFLUX_BUCKET = getenv("INFLUX_BUCKET")
 INFLUX_TOKEN = getenv("INFLUX_TOKEN")
 INFLUX_SERVICE_TAG = getenv("INFLUX_SERVICE_TAG")
 PIHOLE_HOSTS = getenv("PIHOLE_HOSTS")
+PIHOLE_HOSTS_FILE = f"{PROGRAM_DIR}/etc/pihole_hosts"
 RUN_EVERY_SECONDS = int(getenv("RUN_EVERY_SECONDS"))
 VERBOSE = getenv("VERBOSE")
 
@@ -59,15 +60,44 @@ if __name__ == '__main__':
 
     PIHOLE_HOSTS_DICT = {}
 
-    for index, entry in enumerate(PIHOLE_HOSTS.split(",")):
-        try:
-            host, port, token, name = entry.split(":")
-        except ValueError as e:
-            print(e, file=sys.stderr)
-            print(f"Wrong PIHOLE_HOSTS entry <{entry}>!", file=sys.stderr)
+    print(f"PIHOLE_HOSTS = <{PIHOLE_HOSTS}>")
+
+    if PIHOLE_HOSTS == "file":
+        # We expect to find Pi-hole hosts definitions in PIHOLE_HOSTS_FILE
+        if isfile(PIHOLE_HOSTS_FILE):
+            with open(PIHOLE_HOSTS_FILE, "r") as pihole_hosts_file:
+                for index, pihole_hosts_dict in enumerate(json.load(pihole_hosts_file)):
+                    # Check if all the info is contained in the dictionary
+                    try:
+                        PIHOLE_HOSTS_DICT.update({ index : { 
+                                                            "host": pihole_hosts_dict["host"], 
+                                                            "name": pihole_hosts_dict["name"], 
+                                                            "port": pihole_hosts_dict["port"], 
+                                                            "token": pihole_hosts_dict["password"]
+                                                            } 
+                                                  })
+
+                    except KeyError as e:
+                        print(f"Missing key {e} in entry #{index+1}", file=sys.stderr)
+                        print(f"Wrong PIHOLE_HOSTS entry <index>:", file=sys.stderr)
+                        print(json.dumps(pihole_hosts_dict, indent=4), file=sys.stderr)
+                        sys.exit(1)
+            if DEBUG:
+                print(f"Imported hosts definitions from file {PIHOLE_HOSTS_FILE}")
+        else:
+            print(f"File {PIHOLE_HOSTS_FILE} not found!", file=sys.stderr)
             sys.exit(1)
 
-        PIHOLE_HOSTS_DICT.update({ index : { "host": host, "name": name, "port": port, "token": token} })
+    else:
+        for index, entry in enumerate(PIHOLE_HOSTS.split(",")):
+            try:
+                host, port, token, name = entry.split(":")
+            except ValueError as e:
+                print(e, file=sys.stderr)
+                print(f"Wrong PIHOLE_HOSTS entry <{entry}>!", file=sys.stderr)
+                sys.exit(1)
+
+            PIHOLE_HOSTS_DICT.update({ index : { "host": host, "name": name, "port": port, "token": token} })
 
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Starting...")
     print("\nPIHOLE_HOSTS definition:\n")
